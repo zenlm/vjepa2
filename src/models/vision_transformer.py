@@ -453,7 +453,7 @@ def vit_gigantic(patch_size=16, **kwargs):
         embed_dim=1664,
         depth=48,
         num_heads=16,
-        mpl_ratio=64 / 13,
+        mlp_ratio=64 / 13,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         **kwargs
@@ -467,7 +467,7 @@ def vit_gigantic_xformers(patch_size=16, **kwargs):
         embed_dim=1664,
         depth=48,
         num_heads=26,
-        mpl_ratio=64 / 13,
+        mlp_ratio=64 / 13,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         **kwargs

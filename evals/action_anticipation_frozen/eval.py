@@ -743,7 +743,7 @@ def load_checkpoint(device, r_path, classifiers, opt, scaler, val_only=False):
     [o.load_state_dict(c) for o, c in zip(opt, checkpoint["opt"])]
 
     if scaler is not None:
-        [s.load_state_dict(c) for s, c in zip(opt, checkpoint["scaler"])]
+        [s.load_state_dict(c) for s, c in zip(scaler, checkpoint["scaler"])]
     logger.info(f"loaded optimizers from epoch {epoch}")
 
     return classifiers, opt, scaler, epoch
