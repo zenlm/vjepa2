@@ -1,3 +1,9 @@
+
+🆕 **[2026-03-16]:** :fire: V-JEPA 2.1 is released :fire: A new familly of models trained with a novel recipe that learns high quality and temporolly consistent dense features !!!
+
+**[2025-06-25]:** V-JEPA 2 is released. [[`Blog`](https://ai.meta.com/blog/v-jepa-2-world-model-benchmarks)]
+
+
 # V-JEPA 2: Self-Supervised Video Models Enable Understanding, Prediction and Planning
 
 ### [Meta FAIR](https://ai.meta.com/research/)
@@ -13,7 +19,7 @@ Rabbat*, Nicolas Ballas*
 
 [[`Paper`](https://arxiv.org/abs/2506.09985)] [[`Blog`](https://ai.meta.com/blog/v-jepa-2-world-model-benchmarks)] [[`BibTex`](#Citation)]
 
-Official Pytorch codebase for V-JEPA 2 and V-JEPA 2-AC.
+Official Pytorch codebase for V-JEPA 2, V-JEPA 2-AC, V-JEPA 2.1.
 
 V-JEPA 2 is a self-supervised approach to training video encoders, using internet-scale video data, that attains state-of-the-art performance on motion understanding and human action anticipation tasks. V-JEPA 2-AC is a latent action-conditioned world model post-trained from V-JEPA 2 (using a small amount of robot trajectory interaction data) that solves robot manipulation tasks without environment-specific data collection or task-specific training or calibration.
 
@@ -21,11 +27,37 @@ V-JEPA 2 is a self-supervised approach to training video encoders, using interne
 	<img src="assets/flowchart.png" width=100%>
 </p>
 
-<!---
-## Updates
 
-* **[Jun-6-25]:** V-JEPA 2 is released. [[`Blog`](https://ai.meta.com/blog/v-jepa-2-world-model-benchmarks)]
---->
+
+## V-JEPA 2.1 Pre-training
+
+Lorenzo Mur-Labadia, Matthew Muckley, Amir Bar, Mahmoud Assran, Koustuv Sinha, Michael
+Rabbat, Yann LeCun, Nicolas Ballas, Adrien Bardes
+
+[[`Paper`](https://arxiv.org/abs/TODO)] [[`BibTex`](#Citation)]
+
+V-JEPA 2.1 improves the training recipe to focus on learning high-quality and temporally consistent dense features, as higlighted by PCA visualizations:
+
+<p align="center">
+	<img src="assets/teaser_screenshot_5dice.png" width=100%>
+</p>
+
+The V-JEPA 2.1 approach leverages: (1) **Dense Predictive Loss**, a masking-based
+self-supervision objective where all tokens (both visible/context and masked tokens) contribute to the
+self-supervised training loss; (2) **Deep Self-Supervision**, which applies the self-supervised loss at multiple
+intermediate representations of the encoder models; (3) **Multi-Modal Tokenizers** for images and videos;
+and we show that our approach benefit from (4) **Model and data scaling**.
+
+<p align="center">
+	<img src="assets/architecture_vjepa2_1.jpg" width=100%>
+</p>
+
+V-JEPA 2.1 performance across dense and global prediction tasks:
+
+<p align="center">
+	<img src="assets/bars_teaser_tikz-1.png" width=100%>
+</p>
+
 
 ## V-JEPA 2 Pre-training
 
@@ -35,7 +67,7 @@ V-JEPA 2 is a self-supervised approach to training video encoders, using interne
 <table>
   <tr>
     <th colspan="1">Benchmark</th>
-    <th colspan="1">VJEPA 2</th>
+    <th colspan="1">V-JEPA 2</th>
     <th colspan="1">Previous Best</th>
   </tr>
   <tr>
@@ -111,15 +143,19 @@ V-JEPA 2 is a self-supervised approach to training video encoders, using interne
   </tr>
 </table>
 
+
+
+
+
 ## Models
 
-### V-JEPA 2
+### V-JEPA 2 and V-JEPA 2.1
 
 #### HuggingFace
 
-See our [HuggingFace collection](https://huggingface.co/collections/facebook/v-jepa-2-6841bad8413014e185b497a6) for V-JEPA 2.
+See our HuggingFace [collection](https://huggingface.co/collections/facebook/v-jepa-2-6841bad8413014e185b497a6) for V-JEPA 2.
 
-#### Pretrained Checkpoints
+#### V-JEPA 2 Pretrained Checkpoints
 
 <table>
   <tr>
@@ -159,6 +195,51 @@ See our [HuggingFace collection](https://huggingface.co/collections/facebook/v-j
   </tr>
 </table>
 
+#### V-JEPA 2.1 Pretrained Checkpoints
+
+<table>
+  <tr>
+    <th colspan="1">Model</th>
+    <th colspan="1">#Parameters</th>
+    <th colspan="1">Resolution</th>
+    <th colspan="1">Download Link</th>
+    <th colspan="1">Pretraining Config</th>
+  </tr>
+
+  <tr>
+    <td>ViT-B/16</td>
+    <td>80M</td>
+    <td>384</td>
+    <td><a href="https://dl.fbaipublicfiles.com/vjepa2/vjepa2_1_vitb_dist_vitG_384.pt">checkpoint</a></td>
+    <td><a href="configs/train_2_1/vitb16">configs</a></td>
+  </tr>
+
+  <tr>
+    <td>ViT-L/16</td>
+    <td>300M</td>
+    <td>384</td>
+    <td><a href="https://dl.fbaipublicfiles.com/vjepa2/vjepa2_1_vitl_dist_vitG_384.pt">checkpoint</a></td>
+    <td><a href="configs/train_2_1/vitl16">configs</a></td>
+  </tr>
+
+  <tr>
+    <td>ViT-g/16</td>
+    <td>1B</td>
+    <td>384</td>
+    <td><a href="https://dl.fbaipublicfiles.com/vjepa2/vjepa2_1_vitg_384.pt">checkpoint</a></td>
+    <td><a href="configs/train_2_1/vitg16">configs</a></td>
+  </tr>
+
+  <tr>
+    <td>ViT-G/16</td>
+    <td>2B</td>
+    <td>384</td>
+    <td><a href="https://dl.fbaipublicfiles.com/vjepa2/vjepa2_1_vitG_384.pt">checkpoint</a></td>
+    <td><a href="configs/train_2_1/vitG16">configs</a></td>
+  </tr>
+</table>
+
+
 #### Pretrained backbones (via PyTorch Hub)
 
 Please install [Pytorch](https://pytorch.org/get-started/locally/), [timm](https://pypi.org/project/timm/) and [einops](https://pypi.org/project/einops/) locally, then run the following to load each model. Installing Pytorch with CUDA support is strongly recommended.
@@ -169,16 +250,22 @@ import torch
 # preprocessor
 processor = torch.hub.load('facebookresearch/vjepa2', 'vjepa2_preprocessor')
 # models
+# V-JEPA 2
 vjepa2_vit_large = torch.hub.load('facebookresearch/vjepa2', 'vjepa2_vit_large')
 vjepa2_vit_huge = torch.hub.load('facebookresearch/vjepa2', 'vjepa2_vit_huge')
 vjepa2_vit_giant = torch.hub.load('facebookresearch/vjepa2', 'vjepa2_vit_giant')
 vjepa2_vit_giant_384 = torch.hub.load('facebookresearch/vjepa2', 'vjepa2_vit_giant_384')
+# V-JEPA 2.1
+vjepa2_1_vit_base_384 = torch.hub.load('facebookresearch/vjepa2', 'vjepa2_1_vit_base_384')
+vjepa2_1_vit_large_384 = torch.hub.load('facebookresearch/vjepa2', 'vjepa2_1_vit_large_384')
+vjepa2_1_vit_giant_384 = torch.hub.load('facebookresearch/vjepa2', 'vjepa2_1_vit_giant_384')
+vjepa2_1_vit_gigantic_384 = torch.hub.load('facebookresearch/vjepa2', 'vjepa2_1_vit_gigantic_384')
 
 ```
 
 #### Pretrained checkpoints on Huggingface
 
-You can also use our pretrained checkpoints on [Huggingface](https://huggingface.co/collections/facebook/v-jepa-2-6841bad8413014e185b497a6).
+You can also use our pretrained checkpoints on [Huggingface for V-JEPA 2](https://huggingface.co/collections/facebook/v-jepa-2-6841bad8413014e185b497a6).
 
 ```python
 from transformers import AutoVideoProcessor, AutoModel
@@ -188,7 +275,6 @@ hf_repo = "facebook/vjepa2-vitg-fpc64-256"
 # facebook/vjepa2-vith-fpc64-256
 # facebook/vjepa2-vitg-fpc64-256
 # facebook/vjepa2-vitg-fpc64-384
-
 
 model = AutoModel.from_pretrained(hf_repo)
 processor = AutoVideoProcessor.from_pretrained(hf_repo)
@@ -281,6 +367,7 @@ vjepa2_encoder, vjepa2_ac_predictor = torch.hub.load('facebookresearch/vjepa2', 
 
 See [energy_landscape_example.ipynb](notebooks/energy_landscape_example.ipynb) for an example notebook computing the energy landscape of the pretrained action-conditioned backbone using a robot trajectory collected from our lab.
 To run this notebook, you'll need to additionally install [Jupyter](https://jupyter.org/install) and [Scipy](https://scipy.org/install/) in your conda environment.
+
 
 
 ## Getting Started
@@ -400,13 +487,16 @@ python -m app.main_distributed \
 ```
 .
 ├── app                              # training loops
-│   ├── vjepa                        #   video JEPA pre-training
+│   ├── vjepa                        #   V-JEPA 2 pre-training
+│   ├── vjepa_2_1                    #   V-JEPA 2.1 pre-training
 │   ├── vjepa_droid                  #   training the action-conditioned model
 │   ├── main_distributed.py          #   entrypoint for launch app on slurm cluster
 │   └── main.py                      #   entrypoint for launch app locally on your machine
 ├── configs                          # config files with experiment params for training and evaluation
-│   ├── train                        #   pretraining (phase 1), cooldown (phase 2), and action-conditioned training
+│   ├── train                        #   pretraining with V-JEPA 2 (phase 1), cooldown (phase 2), and action-conditioned training
+│   ├── train_2_1                    #   pretraining with V-JEPA 2.1 (phase 1), cooldown (phase 2)
 │   └── eval                         #   frozen evaluations
+│   └── inference                    #   inference only frozen evaluations
 ├── evals                            # evaluation loops training an attentive probe with frozen backbone...
 │   ├── action_anticipation_frozen   #   action anticipation
 │   ├── image_classification_frozen  #   image understanding
@@ -434,7 +524,8 @@ are licensed under the Apache 2.0 license.
 
 
 ## Citation
-If you find this repository useful in your research, please consider giving a star :star: and a citation
+If you find this repository useful in your research, please consider giving a star :star: and cite the papers:
+
 ```bibtex
 @article{assran2025vjepa2,
   title={V-JEPA~2: Self-Supervised Video Models Enable Understanding, Prediction and Planning},
@@ -446,5 +537,15 @@ Krishnakumar, Kapil and Li, Yong and Ma, Xiaodong and Chandar, Sarath and Meier,
 Rabbat, Michael and Ballas, Nicolas},
   journal={arXiv preprint arXiv:2506.09985},
   year={2025}
+}
+```
+
+```bibtex
+@article{murlabadia2026vjepa2_1,
+  title={V-JEPA 2.1: Unlocking Dense Features in Video Self-Supervised Learning},
+  author={Mur-Labadia, Lorenzo and Muckley, Matthew and Bar, Amir and Assran, Mahmoud and
+Sinha, Koustuv and Rabbat, Michael and LeCun, Yann and Ballas, Nicolas and Bardes, Adrien},
+  journal={arXiv preprint arXiv:2603.14482},
+  year={2026}
 }
 ```

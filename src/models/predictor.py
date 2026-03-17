@@ -26,6 +26,7 @@ class VisionTransformerPredictor(nn.Module):
         tubelet_size=2,
         embed_dim=768,
         predictor_embed_dim=384,
+        out_embed_dim=None,
         depth=6,
         num_heads=12,
         mlp_ratio=4.0,
@@ -120,9 +121,16 @@ class VisionTransformerPredictor(nn.Module):
             ]
         )
 
+        if out_embed_dim is None:
+            teacher_embed_dim = kwargs.get("teacher_embed_dim", None)
+            if teacher_embed_dim is not None:
+                out_embed_dim = teacher_embed_dim
+            else:
+                out_embed_dim = embed_dim
+
         # Normalize & project back to input dimension
         self.predictor_norm = norm_layer(predictor_embed_dim)
-        self.predictor_proj = nn.Linear(predictor_embed_dim, embed_dim, bias=True)
+        self.predictor_proj = nn.Linear(predictor_embed_dim, out_embed_dim, bias=True)
 
         # ------ initialize weights
         if self.predictor_pos_embed is not None:

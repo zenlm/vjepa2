@@ -13,9 +13,13 @@ import numpy as np
 import pandas as pd
 import torch
 import torchvision
-from decord import VideoReader, cpu
+from decord import cpu, VideoReader
 
-from src.datasets.utils.dataloader import ConcatIndices, MonitoredDataset, NondeterministicDataLoader
+from src.datasets.utils.dataloader import (
+    ConcatIndices,
+    MonitoredDataset,
+    NondeterministicDataLoader,
+)
 from src.datasets.utils.weighted_sampler import DistributedWeightedSampler
 
 _GLOBAL_SEED = 0
@@ -79,7 +83,9 @@ def make_videodataset(
 
     logger.info("VideoDataset dataset created")
     if datasets_weights is not None:
-        dist_sampler = DistributedWeightedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=True)
+        dist_sampler = DistributedWeightedSampler(
+            dataset, num_replicas=world_size, rank=rank, shuffle=True
+        )
     else:
         dist_sampler = torch.utils.data.distributed.DistributedSampler(
             dataset, num_replicas=world_size, rank=rank, shuffle=True
@@ -146,7 +152,9 @@ class VideoDataset(torch.utils.data.Dataset):
         self.fps = fps
 
         if sum([v is not None for v in (fps, duration, frame_step)]) != 1:
-            raise ValueError(f"Must specify exactly one of either {fps=}, {duration=}, or {frame_step=}.")
+            raise ValueError(
+                f"Must specify exactly one of either {fps=}, {duration=}, or {frame_step=}."
+            )
 
         if isinstance(data_paths, str):
             data_paths = [data_paths]
@@ -155,11 +163,15 @@ class VideoDataset(torch.utils.data.Dataset):
             self.dataset_fpcs = [frames_per_clip for _ in data_paths]
         else:
             if len(dataset_fpcs) != len(data_paths):
-                raise ValueError("Frames per clip not properly specified for NFS data paths")
+                raise ValueError(
+                    "Frames per clip not properly specified for NFS data paths"
+                )
             self.dataset_fpcs = dataset_fpcs
 
         if VideoReader is None:
-            raise ImportError('Unable to import "decord" which is required to read videos.')
+            raise ImportError(
+                'Unable to import "decord" which is required to read videos.'
+            )
 
         # Load video paths and labels
         samples, labels = [], []
@@ -222,7 +234,9 @@ class VideoDataset(torch.utils.data.Dataset):
         dataset_idx, _ = self.per_dataset_indices[index]
         frames_per_clip = self.dataset_fpcs[dataset_idx]
 
-        buffer, clip_indices = self.loadvideo_decord(sample, frames_per_clip)  # [T H W 3]
+        buffer, clip_indices = self.loadvideo_decord(
+            sample, frames_per_clip
+        )  # [T H W 3]
         loaded_video = len(buffer) > 0
         if not loaded_video:
             return
@@ -251,7 +265,9 @@ class VideoDataset(torch.utils.data.Dataset):
         fpc = self.dataset_fpcs[dataset_idx]
 
         try:
-            image_tensor = torchvision.io.read_image(path=sample, mode=torchvision.io.ImageReadMode.RGB)
+            image_tensor = torchvision.io.read_image(
+                path=sample, mode=torchvision.io.ImageReadMode.RGB
+            )
         except Exception:
             return
         label = self.labels[index]
