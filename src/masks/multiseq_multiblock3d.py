@@ -53,11 +53,23 @@ class MaskCollator(object):
 
     def __call__(self, batch):
 
-        # Batch: [buffer, label, clip_indices]
+        # Batch: [buffer, label, clip_indices] for video
+        # or [buffer, label] for images
         filtered_batches = {fpc: [] for fpc in self.mask_generators}
         for sample in batch:
-            fpc = len(sample[-1][-1])
-            filtered_batches[fpc] += [sample]
+            # Check if sample is from video dataset (has clip_indices) or image dataset
+            if len(sample) >= 3 and isinstance(sample[-1], (list, tuple)):
+                # Video sample: sample[-1] is clip_indices, sample[-1][-1] contains frame indices
+                try:
+                    fpc = len(sample[-1][-1])
+                except (TypeError, IndexError):
+                    # Fallback: assume single frame if structure is unexpected
+                    fpc = 1
+            else:
+                # Image sample: single frame
+                fpc = 1
+            if fpc in filtered_batches:
+                filtered_batches[fpc] += [sample]
 
         fpc_collations = []
         for fpc in filtered_batches:
@@ -71,7 +83,9 @@ class MaskCollator(object):
                 masks_enc, masks_pred = mask_generator(batch_size)
                 collated_masks_enc.append(masks_enc)
                 collated_masks_pred.append(masks_pred)
-            fpc_collations += [(collated_batch, collated_masks_enc, collated_masks_pred)]
+            fpc_collations += [
+                (collated_batch, collated_masks_enc, collated_masks_pred)
+            ]
 
         return fpc_collations
 
@@ -100,7 +114,9 @@ class _MaskGenerator(object):
         if not isinstance(spatial_patch_size, tuple):
             spatial_patch_size = (spatial_patch_size,) * 2
         self.crop_size = crop_size
-        self.height, self.width = [crop_size[i] // spatial_patch_size[i] for i in (0, 1)]
+        self.height, self.width = [
+            crop_size[i] // spatial_patch_size[i] for i in (0, 1)
+        ]
         self.duration = num_frames // temporal_patch_size
         self.full_complement = full_complement
         self.pred_full_complement = pred_full_complement
@@ -126,7 +142,9 @@ class _MaskGenerator(object):
             v = i.value
         return v
 
-    def _sample_block_size(self, generator, temporal_scale, spatial_scale, aspect_ratio_scale):
+    def _sample_block_size(
+        self, generator, temporal_scale, spatial_scale, aspect_ratio_scale
+    ):
         # -- Sample temporal block mask scale
         _rand = torch.rand(1, generator=generator).item()
         min_t, max_t = temporal_scale
@@ -193,7 +211,9 @@ class _MaskGenerator(object):
             empty_context = True
             while empty_context:
 
-                mask_e = torch.ones((self.duration, self.height, self.width), dtype=torch.int32)
+                mask_e = torch.ones(
+                    (self.duration, self.height, self.width), dtype=torch.int32
+                )
                 for _ in range(self.npred):
                     mask_e *= self._sample_block_mask(p_size)
                 mask_e = mask_e.flatten()
@@ -216,7 +236,12 @@ class _MaskGenerator(object):
         if self.full_complement:  # predictor mask is just complement of encoder mask
             collated_masks_pred = [
                 torch.tensor(
-                    sorted(list(set(range(int(self.duration * self.height * self.width))) - set(cm.tolist()))),
+                    sorted(
+                        list(
+                            set(range(int(self.duration * self.height * self.width)))
+                            - set(cm.tolist())
+                        )
+                    ),
                     dtype=cm.dtype,
                 )
                 for cm in collated_masks_enc
@@ -224,7 +249,12 @@ class _MaskGenerator(object):
         elif self.pred_full_complement:
             collated_masks_enc = [
                 torch.tensor(
-                    sorted(list(set(range(int(self.duration * self.height * self.width))) - set(cm.tolist()))),
+                    sorted(
+                        list(
+                            set(range(int(self.duration * self.height * self.width)))
+                            - set(cm.tolist())
+                        )
+                    ),
                     dtype=cm.dtype,
                 )
                 for cm in collated_masks_pred

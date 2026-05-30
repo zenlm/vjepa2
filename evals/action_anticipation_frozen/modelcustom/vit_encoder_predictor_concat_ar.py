@@ -26,12 +26,21 @@ import logging
 
 import torch
 
-import src.models.predictor as vit_pred
-import src.models.vision_transformer as vit
-
 logging.basicConfig()
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+
+def _get_model_modules(pretrain_kwargs):
+    """Import encoder/predictor modules based on config."""
+    use_v2_1 = pretrain_kwargs.get("use_v2_1", False)
+    if use_v2_1:
+        import app.vjepa_2_1.models.predictor as vit_pred
+        import app.vjepa_2_1.models.vision_transformer as vit
+    else:
+        import src.models.predictor as vit_pred
+        import src.models.vision_transformer as vit
+    return vit, vit_pred
 
 
 def init_module(
@@ -50,6 +59,8 @@ def init_module(
     # ----------------------------------------------------------------------- #
     # Initialize Encoder
     # ----------------------------------------------------------------------- #
+    vit, vit_pred = _get_model_modules(model_kwargs)
+
     enc_kwargs = model_kwargs["encoder"]
     enc_ckp_key = enc_kwargs.get("checkpoint_key")
     enc_model_name = enc_kwargs.get("model_name")
@@ -76,13 +87,21 @@ def init_module(
     prd_ckp_key = prd_kwargs.get("checkpoint_key")
     prd_model_name = prd_kwargs.get("model_name")
 
+    teacher_embed_dim = prd_kwargs.get("teacher_embed_dim")
+    n_output_distillation = prd_kwargs.get("n_output_distillation", 4)
+    prd_out_embed_dim = teacher_embed_dim // n_output_distillation if teacher_embed_dim is not None else None
+    print(f"[DEBUG] teacher_embed_dim={teacher_embed_dim}, n_output_distillation={n_output_distillation}, prd_out_embed_dim={prd_out_embed_dim}")
+    print(f"[DEBUG] vit_pred module: {vit_pred.__name__}")
+
     predictor = vit_pred.__dict__[prd_model_name](
         img_size=resolution,
         embed_dim=encoder.embed_dim,
         patch_size=encoder.patch_size,
         tubelet_size=encoder.tubelet_size,
+        out_embed_dim=prd_out_embed_dim,
         **prd_kwargs,
     )
+    print(f"[DEBUG] predictor_proj: {predictor.predictor_proj}")
     pretrained_dict = checkpoint[prd_ckp_key]
     # --
     pretrained_dict = {k.replace("module.", ""): v for k, v in pretrained_dict.items()}
@@ -92,7 +111,7 @@ def init_module(
             logger.info(f'key "{k}" could not be found in loaded state dict')
         elif pretrained_dict[k].shape != v.shape:
             logger.info(
-                f'key "{k}" is of different shape in model and loaded state dict', pretrained_dict[k].shape, v.shape
+                f'key "{k}" is of different shape in model and loaded state dict: {pretrained_dict[k].shape} vs {v.shape}'
             )
             pretrained_dict[k] = v
     msg = predictor.load_state_dict(pretrained_dict, strict=False)
@@ -112,6 +131,10 @@ def init_module(
         **wrapper_kwargs,
     )
     model.embed_dim = encoder.embed_dim
+
+    # Enable hierarchical feature output for non-distilled predictors
+    if hasattr(predictor, 'hierarchical_layers') and len(predictor.hierarchical_layers) > 1:
+        encoder.return_hierarchical = True
 
     return model
 
@@ -151,20 +174,24 @@ class AnticipativeWrapper(torch.nn.Module):
         :param x: (Tensor) video of shape [B, C, T, H, W]
         :param anticipation_time: (Tensor) [B] seconds into the future to predict for each sample in batch
         """
-        x = self.encoder(x)
+        x_full = self.encoder(x)
 
-        # determine 1D position of context tokens (x)
-        # determine 1D position of prediction tokens
-        # forward predictor with ctxt=x, tgt=None, masks_ctxt, masks_tgt
         if self.no_predictor:
-            return x
+            return x_full
 
-        # Will output representations of $num_output_frames, that are
-        # $anticipation_time seconds into the future.
-        B, N, D = x.size()
+        B, N, D_full = x_full.size()
+        embed_dim = self.encoder.embed_dim
+        use_hierarchical = D_full > embed_dim
+
+        # For the accumulator/classifier, use last-layer features (embed_dim)
+        # For the predictor, use full hierarchical features (D_full)
+        if use_hierarchical:
+            x = x_full[:, :, -embed_dim:]
+        else:
+            x = x_full
 
         if self.no_encoder:
-            x_accumulate = torch.rand(x.size(0), 0, x.size(2)).to(x.device)
+            x_accumulate = torch.rand(B, 0, embed_dim).to(x.device)
         else:
             x_accumulate = x.clone()
 
@@ -180,9 +207,18 @@ class AnticipativeWrapper(torch.nn.Module):
         tgt_positions = torch.arange(N_pred).unsqueeze(0).repeat(B, 1).to(x.device)
         tgt_positions += skip_positions.unsqueeze(1).repeat(1, N_pred)
 
+        x_pred_input = x_full
         for _ in range(self.num_steps):
-            x_pred = self.predictor(x, masks_x=ctxt_positions, masks_y=tgt_positions)
+            pred_out = self.predictor(x_pred_input, masks_x=ctxt_positions, masks_y=tgt_positions)
+            x_pred_full = pred_out[0] if isinstance(pred_out, tuple) else pred_out
+
+            if x_pred_full.size(-1) != embed_dim:
+                x_pred = x_pred_full[:, :, -embed_dim:]
+            else:
+                x_pred = x_pred_full
+
             x_accumulate = torch.cat([x_accumulate, x_pred], dim=1)
-            x = torch.cat([x[:, N_pred:, :], x_pred], dim=1)
+            x_pred_for_input = x_pred_full if x_pred_full.size(-1) == x_pred_input.size(-1) else x_pred
+            x_pred_input = torch.cat([x_pred_input[:, N_pred:, :], x_pred_for_input], dim=1)
 
         return x_accumulate

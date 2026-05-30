@@ -6,7 +6,7 @@
 from setuptools import setup
 
 NAME = "vjepa2"
-VERSION = "0.0.1"
+VERSION = "0.0.2"
 DESCRIPTION = "PyTorch code and models for V-JEPA 2."
 URL = "https://github.com/facebookresearch/vjepa2"
 
