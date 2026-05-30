@@ -218,7 +218,7 @@ class VisionTransformer(nn.Module):
 
         if self.is_video:
 
-            # If pos_embed already corret size, just return
+            # If pos_embed already correct size, just return
             _, _, T, H, W = x.shape
             if H == self.img_height and W == self.img_width and T == self.num_frames:
                 return pos_embed
@@ -254,7 +254,7 @@ class VisionTransformer(nn.Module):
 
         else:
 
-            # If pos_embed already corret size, just return
+            # If pos_embed already correct size, just return
             _, _, H, W = x.shape
             if H == self.img_height and W == self.img_width:
                 return pos_embed
@@ -453,7 +453,7 @@ def vit_gigantic(patch_size=16, **kwargs):
         embed_dim=1664,
         depth=48,
         num_heads=16,
-        mpl_ratio=64 / 13,
+        mlp_ratio=64 / 13,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         **kwargs
@@ -467,7 +467,7 @@ def vit_gigantic_xformers(patch_size=16, **kwargs):
         embed_dim=1664,
         depth=48,
         num_heads=26,
-        mpl_ratio=64 / 13,
+        mlp_ratio=64 / 13,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         **kwargs

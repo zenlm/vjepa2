@@ -11,6 +11,7 @@ class MultiSeqWrapper(nn.Module):
     def __init__(self, backbone):
         super().__init__()
         self.backbone = backbone
+        self.embed_dim = backbone.embed_dim
 
     def forward(self, x, masks=None):
         """

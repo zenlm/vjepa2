@@ -81,7 +81,6 @@ def main(args_eval, resume_preempt=False):
     dataset_name = args_data.get("dataset_name")
     num_classes = args_data.get("num_classes")
     root_path = args_data.get("root_path", None)
-    image_folder = args_data.get("image_folder", None)
     resolution = args_data.get("resolution", 224)
     normalization = args_data.get("normalization", None)
 
@@ -157,7 +156,6 @@ def main(args_eval, resume_preempt=False):
         dataset_name=dataset_name,
         root_path=root_path,
         img_size=resolution,
-        image_folder=image_folder,
         batch_size=batch_size,
         world_size=world_size,
         rank=rank,
@@ -168,7 +166,6 @@ def main(args_eval, resume_preempt=False):
         dataset_name=dataset_name,
         root_path=root_path,
         img_size=resolution,
-        image_folder=image_folder,
         batch_size=batch_size,
         world_size=world_size,
         rank=rank,
@@ -354,7 +351,6 @@ DEFAULT_NORMALIZATION = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
 def make_dataloader(
     dataset_name,
     root_path,
-    image_folder,
     batch_size,
     world_size,
     rank,
@@ -396,7 +392,6 @@ def make_dataloader(
         world_size=world_size,
         rank=rank,
         root_path=root_path,
-        image_folder=image_folder,
         training=training,
         drop_last=False,
         subset_file=subset_file,
