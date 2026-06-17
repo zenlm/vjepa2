@@ -1,4 +1,4 @@
-# vjepa2 — AI Assistant Context
+# vjepa2
 
 # V-JEPA 2: Self-Supervised Video Models Enable Understanding, Prediction and Planning
 
